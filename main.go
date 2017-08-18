@@ -19,6 +19,7 @@ func keepAlive() {
 		_, err := http.Get("http://127.0.0.1:8001")
 		if err == nil {
 			_, err = daemon.SdNotify(false, "WATCHDOG=1")
+			log.Println("notified")
 			if err != nil {
 				log.Panicf("unable to notify systemd %s", err)
 			}
