@@ -1,26 +1,34 @@
 package main
 
 import (
+	"fmt"
+	"github.com/coreos/go-systemd/daemon"
 	"log"
 	"net"
 	"net/http"
 	"time"
-	"github.com/coreos/go-systemd/daemon"
 )
 
-func keep_alive() error {
+// TODO use a channel to report an error
+func keepAlive() {
 	interval, err := daemon.SdWatchdogEnabled(false)
 	if err != nil || interval == 0 {
-		return err
+		return
 	}
 	for {
 		_, err := http.Get("http://127.0.0.1:8001")
 		if err == nil {
-			daemon.SdNotify(false, "WATCHDOG=1")
+			_, err = daemon.SdNotify(false, "WATCHDOG=1")
+			if err != nil {
+				log.Panicf("unable to notify systemd %s", err)
+			}
 		}
 		time.Sleep(interval / 3)
 	}
-	return nil
+}
+
+func handleRoot(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "hi there, I love %s!", r.URL.Path[1:])
 }
 
 func main() {
@@ -28,10 +36,19 @@ func main() {
 	if err != nil {
 		log.Panicf("cannot listen: %s", err)
 	}
-	daemon.SdNotify(false, "READY=1")
+	// notify systemd
+	_, err = daemon.SdNotify(false, "READY=1")
+	if err != nil {
+		log.Panicln("unable to notify systemd")
+	}
 
-	// keep alive via watchdog
-	go keep_alive()
+	// keep systemd service alive via watchdog
+	go keepAlive()
 
-	http.Serve(l, nil)
+	http.HandleFunc("/", handleRoot)
+
+	err = http.Serve(l, nil)
+	if err != nil {
+		log.Panicln(err)
+	}
 }
