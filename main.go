@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/coreos/go-systemd/daemon"
+	"github.com/gorilla/mux"
 	"log"
 	"net"
 	"net/http"
@@ -29,7 +30,7 @@ func keepAlive() {
 }
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hi there, I love %s!", r.URL.Path[1:])
+	fmt.Fprintln(w, "welcome to my site. i love you.")
 }
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 	if err != nil {
 		log.Panicf("cannot listen: %s", err)
 	}
+
 	// notify systemd
 	_, err = daemon.SdNotify(false, "READY=1")
 	if err != nil {
@@ -46,9 +48,18 @@ func main() {
 	// keep systemd service alive via watchdog
 	go keepAlive()
 
-	http.HandleFunc("/", handleRoot)
+	router := mux.NewRouter()
 
-	err = http.Serve(l, nil)
+	srv := &http.Server{
+		Handler:      router,
+		Addr:         "127.0.0.1:8081",
+		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  10 * time.Second,
+	}
+
+	router.HandleFunc("/", handleRoot)
+
+	err = srv.Serve(l)
 	if err != nil {
 		log.Panicln(err)
 	}
