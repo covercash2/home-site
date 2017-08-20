@@ -1,14 +1,21 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"github.com/coreos/go-systemd/daemon"
 	"github.com/gorilla/mux"
+	"html/template"
 	"log"
 	"net"
 	"net/http"
 	"time"
 )
+
+type webPage struct {
+	Title  string
+	Header string
+	Body   []byte
+}
 
 // TODO use a channel to report an error
 func keepAlive() {
@@ -30,7 +37,21 @@ func keepAlive() {
 }
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "welcome to my site. i love you.")
+	page := webPage{
+		"testing webpage",
+		"test header",
+		[]byte("some bytes to test body"),
+	}
+
+	temp, err := template.ParseFiles("templates/index.tmpl")
+	if err != nil {
+		log.Panicln("unable to parse template")
+	}
+
+	err = temp.Execute(w, page)
+	if err != nil {
+		log.Panicln("unable to execute template")
+	}
 }
 
 func main() {
@@ -48,7 +69,14 @@ func main() {
 	// keep systemd service alive via watchdog
 	go keepAlive()
 
+	var dir string
+
+	flag.StringVar(&dir, "dir", "./static", "directory for serving files")
+
 	router := mux.NewRouter()
+
+	router.PathPrefix("/static/").
+		Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(dir))))
 
 	srv := &http.Server{
 		Handler:      router,
