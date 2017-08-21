@@ -11,10 +11,29 @@ import (
 	"time"
 )
 
+var templates = map[string]*template.Template{
+	"index": template.Must(template.ParseFiles(
+		"templates/base.tmpl",
+		"templates/index.tmpl",
+		"templates/nav.tmpl",
+	)),
+}
+
 type webPage struct {
-	Title  string
-	Header string
-	Body   []byte
+	Title string
+	Body  []byte
+}
+
+var indexPage = webPage{
+	"C/$",
+	[]byte("test page"),
+}
+
+func renderTemplate(w http.ResponseWriter, tmpl string, page *webPage) {
+	err := templates[tmpl].ExecuteTemplate(w, "base", page)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // TODO use a channel to report an error
@@ -27,7 +46,6 @@ func keepAlive() {
 		_, err := http.Get("http://127.0.0.1:8001")
 		if err == nil {
 			_, err = daemon.SdNotify(false, "WATCHDOG=1")
-			log.Println("notified")
 			if err != nil {
 				log.Panicf("unable to notify systemd %s", err)
 			}
@@ -39,19 +57,10 @@ func keepAlive() {
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	page := webPage{
 		"testing webpage",
-		"test header",
 		[]byte("some bytes to test body"),
 	}
 
-	temp, err := template.ParseFiles("templates/index.tmpl")
-	if err != nil {
-		log.Panicln("unable to parse template")
-	}
-
-	err = temp.Execute(w, page)
-	if err != nil {
-		log.Panicln("unable to execute template")
-	}
+	renderTemplate(w, "index", &page)
 }
 
 func main() {

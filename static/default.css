@@ -1,0 +1,45 @@
+body {
+    background-color: #3333aa;
+    color: #dedede;
+}
+
+nav {
+    background-color: #333;
+    border-radius: 4px;
+    margin-left: 5%;
+    margin-right: 5%;
+    overflow: hidden;
+    width: 90%;
+}
+
+nav ul {
+    margin: 0px;
+    padding: 0px;
+}
+
+nav ul li {
+    display: inline-block;
+    list-style-type: none;
+    
+    -webkit-transition: all 0.5s;
+    -moz-transition: all 0.5s;
+    -ms-transition: all 0.5s;
+    -o-transition: all 0.5s;
+    transition: all 0.5s; 
+}
+
+nav ul li:hover {
+    background-color: #dedede;
+}
+
+nav ul li:hover > a {
+    color: #3333ff;
+}
+
+nav > ul > li > a {
+    color: #dedede;
+    display: block;
+    line-height: 48px;
+    margin: 0px 16px 0px 16px;
+    text-decoration: none;
+}
