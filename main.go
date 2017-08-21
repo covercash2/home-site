@@ -13,14 +13,14 @@ import (
 
 var templates = map[string]*template.Template{
 	"index": template.Must(template.ParseFiles(
-		"templates/base.tmpl",
-		"templates/index.tmpl",
-		"templates/nav.tmpl",
+		"./templates/base.tmpl",
+		"./templates/index.tmpl",
+		"./templates/nav.tmpl",
 	)),
 	"wip": template.Must(template.ParseFiles(
-		"templates/base.tmpl",
-		"templates/nav.tmpl",
-		"templates/wip.tmpl",
+		"./templates/base.tmpl",
+		"./templates/nav.tmpl",
+		"./templates/wip.tmpl",
 	)),
 }
 
