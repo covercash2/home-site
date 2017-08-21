@@ -1,10 +1,18 @@
 {{define "base"}}
-	 <head>
-		<link rel="stylesheet" type="text/css" href="/static/default.css">
-	 {{template "head" .}}
-	 </head>
-	 <body>
-	 {{template "nav" .}}
-	 {{template "content" .}}
-	 </body>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/default.css">
+    {{template "head" .}}
+</head>
+<body>
+{{template "nav" .}}
+<main>
+{{template "content" .}}
+</main>
+</body>
+
+<footer>
+    questions, comments, criticisms, concerns?<br/>
+    contact me at covercash2@gmail.com
+</footer>
 {{end}}

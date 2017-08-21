@@ -1,13 +1,19 @@
+:root {
+    --border-radius: 4px;
+    --shadow: 0px 5px 5px 5px rgba(10, 10, 10, 0.5);
+}
+
 body {
     background-color: #3333aa;
     color: #dedede;
+    margin: 0;
 }
 
 nav {
     background-color: #333;
-    border-radius: 4px;
-    margin-left: 5%;
-    margin-right: 5%;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    margin: 8px 5% 16px 5%;
     overflow: hidden;
     width: 90%;
 }
@@ -42,4 +48,27 @@ nav > ul > li > a {
     line-height: 48px;
     margin: 0px 16px 0px 16px;
     text-decoration: none;
+}
+
+main {
+    background-color: #333;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    line-height: 1.25em;
+    font-size: 1.15em;
+    margin: 16px 5%;
+    padding: 24px;
+}
+
+main a {
+    color: #9988ee;
+}
+
+footer {
+    background-color: #222222;
+    height: 50px;
+    margin: 0;
+    padding: 16px;
+    text-align: center;
+    width: 100%;
 }

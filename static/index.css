@@ -1,0 +1,31 @@
+.photo-div {
+  background-image: url(https://image.ibb.co/bGbwK5/violin_broken_bridge.jpg);
+  background-position: 50% 50%;
+  background-size: cover;
+  border-radius: var(--border-radius);
+  float: left;
+  height: 384px;
+  margin: auto 16px auto auto;
+  max-width: 100%;
+  overflow: hidden;
+  width: 256px;
+}
+
+#welcome-header {
+  text-align: center;
+  font-size: 2.5em;
+}
+
+@media only screen and (max-width: 500px) {
+  .photo-div {
+    height: 128px;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+}
+
+@media only screen and (min-width: 1000px) {
+  .photo-div {
+    width: 512px;
+  }
+}

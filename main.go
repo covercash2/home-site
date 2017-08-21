@@ -17,6 +17,11 @@ var templates = map[string]*template.Template{
 		"templates/index.tmpl",
 		"templates/nav.tmpl",
 	)),
+	"wip": template.Must(template.ParseFiles(
+		"templates/base.tmpl",
+		"templates/nav.tmpl",
+		"templates/wip.tmpl",
+	)),
 }
 
 type webPage struct {
@@ -31,6 +36,13 @@ var indexPage = webPage{
 
 func renderTemplate(w http.ResponseWriter, tmpl string, page *webPage) {
 	err := templates[tmpl].ExecuteTemplate(w, "base", page)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func renderPlainTemplate(w http.ResponseWriter, tmpl string) {
+	err := templates[tmpl].ExecuteTemplate(w, "base", nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -61,6 +73,10 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderTemplate(w, "index", &page)
+}
+
+func handleWip(w http.ResponseWriter, r *http.Request) {
+	renderPlainTemplate(w, "wip")
 }
 
 func main() {
@@ -95,6 +111,11 @@ func main() {
 	}
 
 	router.HandleFunc("/", handleRoot)
+	router.HandleFunc("/music", handleWip)
+	router.HandleFunc("/tech", handleWip)
+	router.HandleFunc("/store", handleWip)
+	router.HandleFunc("/contact", handleWip)
+	router.HandleFunc("/about", handleWip)
 
 	err = srv.Serve(l)
 	if err != nil {
