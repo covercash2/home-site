@@ -11,41 +11,9 @@ import (
 	"time"
 )
 
-var templates = map[string]*template.Template{
-	"index": template.Must(template.ParseFiles(
-		"./templates/base.tmpl",
-		"./templates/index.tmpl",
-		"./templates/nav.tmpl",
-	)),
-	"wip": template.Must(template.ParseFiles(
-		"./templates/base.tmpl",
-		"./templates/nav.tmpl",
-		"./templates/wip.tmpl",
-	)),
-}
-
 type webPage struct {
 	Title string
 	Body  []byte
-}
-
-var indexPage = webPage{
-	"C/$",
-	[]byte("test page"),
-}
-
-func renderTemplate(w http.ResponseWriter, tmpl string, page *webPage) {
-	err := templates[tmpl].ExecuteTemplate(w, "base", page)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func renderPlainTemplate(w http.ResponseWriter, tmpl string) {
-	err := templates[tmpl].ExecuteTemplate(w, "base", nil)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 }
 
 // TODO use a channel to report an error
@@ -66,20 +34,42 @@ func keepAlive() {
 	}
 }
 
-func handleRoot(w http.ResponseWriter, r *http.Request) {
-	page := webPage{
-		"testing webpage",
-		[]byte("some bytes to test body"),
+func handleBaseTemplate(
+	tmpl *template.Template,
+	data interface{},
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := tmpl.ExecuteTemplate(w, "base", data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
-
-	renderTemplate(w, "index", &page)
-}
-
-func handleWip(w http.ResponseWriter, r *http.Request) {
-	renderPlainTemplate(w, "wip")
 }
 
 func main() {
+	var err error
+	templates := make(map[string]*template.Template)
+
+	templates["index"], err = template.New("index").ParseFiles(
+		"./templates/base.tmpl",
+		"./templates/index.tmpl",
+		"./templates/nav.tmpl",
+	)
+	if err != nil {
+		log.Panicf("unable to load index template: %s", err)
+		return
+	}
+
+	templates["wip"], err = template.New("wip").ParseFiles(
+		"./templates/base.tmpl",
+		"./templates/nav.tmpl",
+		"./templates/wip.tmpl",
+	)
+	if err != nil {
+		log.Panicf("unable to load wip template: %s", err)
+		return
+	}
+
 	l, err := net.Listen("tcp", ":8081")
 	if err != nil {
 		log.Panicf("cannot listen: %s", err)
@@ -110,12 +100,12 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 	}
 
-	router.HandleFunc("/", handleRoot)
-	router.HandleFunc("/music", handleWip)
-	router.HandleFunc("/tech", handleWip)
-	router.HandleFunc("/store", handleWip)
-	router.HandleFunc("/contact", handleWip)
-	router.HandleFunc("/about", handleWip)
+	router.HandleFunc("/", handleBaseTemplate(templates["index"], nil))
+	router.HandleFunc("/music", handleBaseTemplate(templates["wip"], nil))
+	router.HandleFunc("/tech", handleBaseTemplate(templates["wip"], nil))
+	router.HandleFunc("/store", handleBaseTemplate(templates["wip"], nil))
+	router.HandleFunc("/contact", handleBaseTemplate(templates["wip"], nil))
+	router.HandleFunc("/about", handleBaseTemplate(templates["wip"], nil))
 
 	err = srv.Serve(l)
 	if err != nil {
