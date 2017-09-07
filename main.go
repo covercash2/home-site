@@ -11,13 +11,15 @@ import (
 	"time"
 )
 
+var defaultStaticDir = "./static"
+
 type webPage struct {
 	Title string
 	Body  []byte
 }
 
 // TODO use a channel to report an error
-func keepAlive() {
+func KeepAlive() {
 	interval, err := daemon.SdWatchdogEnabled(false)
 	if err != nil || interval == 0 {
 		return
@@ -46,14 +48,25 @@ func handleBaseTemplate(
 	}
 }
 
+// ParseFlags parses command line flags
+func ParseFlags(staticDir *string) {
+	flag.StringVar(staticDir, "staticDir", defaultStaticDir,
+		"directory for serving static files")
+
+	flag.Parse()
+}
+
 func main() {
 	var err error
 	templates := make(map[string]*template.Template)
 
+	var staticDir string
+	ParseFlags(&staticDir)
+
 	templates["index"], err = template.New("index").ParseFiles(
-		"./templates/base.tmpl",
-		"./templates/index.tmpl",
-		"./templates/nav.tmpl",
+		staticDir+"/templates/base.tmpl",
+		staticDir+"/templates/index.tmpl",
+		staticDir+"/templates/nav.tmpl",
 	)
 	if err != nil {
 		log.Panicf("unable to load index template: %s", err)
@@ -61,9 +74,9 @@ func main() {
 	}
 
 	templates["wip"], err = template.New("wip").ParseFiles(
-		"./templates/base.tmpl",
-		"./templates/nav.tmpl",
-		"./templates/wip.tmpl",
+		staticDir+"/templates/base.tmpl",
+		staticDir+"/templates/nav.tmpl",
+		staticDir+"/templates/wip.tmpl",
 	)
 	if err != nil {
 		log.Panicf("unable to load wip template: %s", err)
@@ -82,17 +95,14 @@ func main() {
 	}
 
 	// keep systemd service alive via watchdog
-	go keepAlive()
-
-	var dir string
-
-	flag.StringVar(&dir, "dir", "./static", "directory for serving files")
+	go KeepAlive()
 
 	router := mux.NewRouter()
 
 	router.PathPrefix("/static/").
-		Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(dir))))
+		Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 
+	// TODO change port to something not in go docs
 	srv := &http.Server{
 		Handler:      router,
 		Addr:         "127.0.0.1:8081",
