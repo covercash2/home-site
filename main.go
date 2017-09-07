@@ -11,13 +11,15 @@ import (
 	"time"
 )
 
-var defaultStaticDir = "./static"
+var defaultStaticDir = "./static/"
 
 type webPage struct {
 	Title string
 	Body  []byte
 }
 
+// KeepAlive uses systemd watchdog to keep
+// the server alive
 // TODO use a channel to report an error
 func KeepAlive() {
 	interval, err := daemon.SdWatchdogEnabled(false)
@@ -64,9 +66,9 @@ func main() {
 	ParseFlags(&staticDir)
 
 	templates["index"], err = template.New("index").ParseFiles(
-		staticDir+"/templates/base.tmpl",
-		staticDir+"/templates/index.tmpl",
-		staticDir+"/templates/nav.tmpl",
+		staticDir+"templates/base.tmpl",
+		staticDir+"templates/index.tmpl",
+		staticDir+"templates/nav.tmpl",
 	)
 	if err != nil {
 		log.Panicf("unable to load index template: %s", err)
@@ -74,9 +76,9 @@ func main() {
 	}
 
 	templates["wip"], err = template.New("wip").ParseFiles(
-		staticDir+"/templates/base.tmpl",
-		staticDir+"/templates/nav.tmpl",
-		staticDir+"/templates/wip.tmpl",
+		staticDir+"templates/base.tmpl",
+		staticDir+"templates/nav.tmpl",
+		staticDir+"templates/wip.tmpl",
 	)
 	if err != nil {
 		log.Panicf("unable to load wip template: %s", err)
