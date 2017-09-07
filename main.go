@@ -85,6 +85,16 @@ func main() {
 		return
 	}
 
+	templates["contact"], err = template.New("contact").ParseFiles(
+		staticDir+"templates/base.tmpl",
+		staticDir+"templates/nav.tmpl",
+		staticDir+"templates/contact.tmpl",
+	)
+	if err != nil {
+		log.Panicf("unable to load contact template: %s", err)
+		return
+	}
+
 	l, err := net.Listen("tcp", ":8081")
 	if err != nil {
 		log.Panicf("cannot listen: %s", err)
@@ -116,7 +126,7 @@ func main() {
 	router.HandleFunc("/music", handleBaseTemplate(templates["wip"], nil))
 	router.HandleFunc("/tech", handleBaseTemplate(templates["wip"], nil))
 	router.HandleFunc("/store", handleBaseTemplate(templates["wip"], nil))
-	router.HandleFunc("/contact", handleBaseTemplate(templates["wip"], nil))
+	router.HandleFunc("/contact", handleBaseTemplate(templates["contact"], nil))
 	router.HandleFunc("/about", handleBaseTemplate(templates["wip"], nil))
 
 	err = srv.Serve(l)
