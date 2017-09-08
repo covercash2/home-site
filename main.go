@@ -58,6 +58,23 @@ func ParseFlags(staticDir *string) {
 	flag.Parse()
 }
 
+func loadRegularTemplate(name string,
+	templateDir string) *template.Template {
+
+	path := templateDir + name + ".tmpl"
+
+	tmpl, err := template.New(name).ParseFiles(
+		templateDir+"base.tmpl",
+		templateDir+"nav.tmpl",
+		templateDir+name+".tmpl",
+	)
+	if err != nil {
+		log.Panicf("could not load %s template\npath: %s\nerr: %s",
+			name, path, err)
+	}
+	return tmpl
+}
+
 func main() {
 	var err error
 	templates := make(map[string]*template.Template)
@@ -65,34 +82,19 @@ func main() {
 	var staticDir string
 	ParseFlags(&staticDir)
 
-	templates["index"], err = template.New("index").ParseFiles(
-		staticDir+"templates/base.tmpl",
-		staticDir+"templates/index.tmpl",
-		staticDir+"templates/nav.tmpl",
-	)
-	if err != nil {
-		log.Panicf("unable to load index template: %s", err)
-		return
+	templateDir := staticDir + "templates/"
+
+	templateNames := [...]string{
+		"about",
+		"contact",
+		"index",
+		"music",
+		"tech",
+		"wip",
 	}
 
-	templates["wip"], err = template.New("wip").ParseFiles(
-		staticDir+"templates/base.tmpl",
-		staticDir+"templates/nav.tmpl",
-		staticDir+"templates/wip.tmpl",
-	)
-	if err != nil {
-		log.Panicf("unable to load wip template: %s", err)
-		return
-	}
-
-	templates["contact"], err = template.New("contact").ParseFiles(
-		staticDir+"templates/base.tmpl",
-		staticDir+"templates/nav.tmpl",
-		staticDir+"templates/contact.tmpl",
-	)
-	if err != nil {
-		log.Panicf("unable to load contact template: %s", err)
-		return
+	for _, s := range templateNames {
+		templates[s] = loadRegularTemplate(s, templateDir)
 	}
 
 	l, err := net.Listen("tcp", ":8081")
@@ -123,11 +125,11 @@ func main() {
 	}
 
 	router.HandleFunc("/", handleBaseTemplate(templates["index"], nil))
-	router.HandleFunc("/music", handleBaseTemplate(templates["wip"], nil))
-	router.HandleFunc("/tech", handleBaseTemplate(templates["wip"], nil))
+	router.HandleFunc("/music", handleBaseTemplate(templates["music"], nil))
+	router.HandleFunc("/tech", handleBaseTemplate(templates["tech"], nil))
 	router.HandleFunc("/store", handleBaseTemplate(templates["wip"], nil))
 	router.HandleFunc("/contact", handleBaseTemplate(templates["contact"], nil))
-	router.HandleFunc("/about", handleBaseTemplate(templates["wip"], nil))
+	router.HandleFunc("/about", handleBaseTemplate(templates["about"], nil))
 
 	err = srv.Serve(l)
 	if err != nil {
