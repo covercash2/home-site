@@ -1,13 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
+	validator "github.com/asaskevich/govalidator"
 	"github.com/coreos/go-systemd/daemon"
 	"github.com/gorilla/mux"
 	"html/template"
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -16,6 +21,12 @@ var defaultStaticDir = "./static/"
 type webPage struct {
 	Title string
 	Body  []byte
+}
+
+type contactInfo struct {
+	Name  string
+	Phone string
+	Email string
 }
 
 // KeepAlive uses systemd watchdog to keep
@@ -50,12 +61,49 @@ func handleBaseTemplate(
 	}
 }
 
+type emailForm struct {
+	Name    string
+	Email   string
+	Phone   string
+	Message string
+}
+
+func handleEmailSend(email string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+
+		var form emailForm
+		err := decoder.Decode(&form)
+		if err != nil {
+			log.Panicf("could not decode message:\n%s", r.Body)
+		}
+
+		log.Printf("struct formed from json:\n%s\n", form)
+
+		if email == "none" {
+			log.Println("email address is not valid or was not given\n" +
+				"unable to send email")
+		} else {
+
+		}
+	}
+}
+
 // ParseFlags parses command line flags
-func ParseFlags(staticDir *string) {
-	flag.StringVar(staticDir, "staticDir", defaultStaticDir,
+// returns the directory where static files are served
+// and the admin email respectively
+// TODO add flags for email address and password
+func ParseFlags() (string, string) {
+	var staticDir, email string
+	flag.StringVar(&staticDir, "staticDir", defaultStaticDir,
 		"directory for serving static files")
 
+	flag.StringVar(&email, "email", "none",
+		"email address to send messages to")
+
 	flag.Parse()
+
+	return staticDir, email
 }
 
 func loadRegularTemplate(name string,
@@ -75,12 +123,36 @@ func loadRegularTemplate(name string,
 	return tmpl
 }
 
+func sendMail(form emailForm) error {
+	return nil
+}
+
+func handleSignals() {
+	sigChannel := make(chan os.Signal, 1)
+	signal.Notify(sigChannel, syscall.SIGABRT)
+	sig := <-sigChannel
+	log.Printf("signal recieved: %s\n", sig)
+	panic("process aborted")
+}
+
 func main() {
 	var err error
 	templates := make(map[string]*template.Template)
 
-	var staticDir string
-	ParseFlags(&staticDir)
+	// TODO encode contact info
+	//////////////////////////////////////////////
+	// myInfo := contactInfo{				    //
+	// 	Name:  "Chris Overcash",			    //
+	// 	Email: "covercash.biz@gmail.com",	    //
+	// 	Phone: "(501) 510-0946",			    //
+	// }									    //
+	//////////////////////////////////////////////
+
+	staticDir, email := ParseFlags()
+
+	if email == "none" || !validator.IsEmail(email) {
+		log.Printf("email address is not valid: %s\n", email)
+	}
 
 	templateDir := staticDir + "templates/"
 
@@ -110,6 +182,7 @@ func main() {
 
 	// keep systemd service alive via watchdog
 	go KeepAlive()
+	go handleSignals()
 
 	router := mux.NewRouter()
 
@@ -130,6 +203,8 @@ func main() {
 	router.HandleFunc("/store", handleBaseTemplate(templates["wip"], nil))
 	router.HandleFunc("/contact", handleBaseTemplate(templates["contact"], nil))
 	router.HandleFunc("/about", handleBaseTemplate(templates["about"], nil))
+
+	router.HandleFunc("/api/email", handleEmailSend(email))
 
 	err = srv.Serve(l)
 	if err != nil {
