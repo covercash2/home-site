@@ -1,0 +1,29 @@
+my website
+
+* bugs
+** TODO fix watchdog
+** TODO 403 error on json POST
+* modules
+** main
+   does specific configurations
+and starts routines
+** systemd
+   contacts systemd
+to keep process alive
+*** watchdog
+**** TODO watchdog fails every 30s on the server
+** route
+   routes api calls
+** TODO tech
+   a sub-site that handles tech business
+** TODO music
+   a sub-site to handle music business
+
+* csrf
+** TODO learn more
+** TODO put csrf in the the template
+** TODO figure out how to store the key
+* javascript
+** TODO get a preprocessor
+at least a minifier
+** TODO frontend framework/library

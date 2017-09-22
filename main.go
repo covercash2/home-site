@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	validator "github.com/asaskevich/govalidator"
 	"github.com/coreos/go-systemd/daemon"
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"html/template"
 	"log"
@@ -27,6 +27,11 @@ type contactInfo struct {
 	Name  string
 	Phone string
 	Email string
+}
+
+type configuration struct {
+	StaticDir string
+	CSRFKey   string
 }
 
 // KeepAlive uses systemd watchdog to keep
@@ -93,17 +98,20 @@ func handleEmailSend(email string) http.HandlerFunc {
 // returns the directory where static files are served
 // and the admin email respectively
 // TODO add flags for email address and password
-func ParseFlags() (string, string) {
-	var staticDir, email string
+func ParseFlags() (string, []byte) {
+	var staticDir string
 	flag.StringVar(&staticDir, "staticDir", defaultStaticDir,
 		"directory for serving static files")
 
-	flag.StringVar(&email, "email", "none",
-		"email address to send messages to")
+	// flag.StringVar(&key, "key", "", "csrf key")
+
+	// if len(key) != 32 {
+	// 	log.Panicf("key is not valid:\n%s\n", key)
+	// }
 
 	flag.Parse()
 
-	return staticDir, email
+	return staticDir, nil
 }
 
 func loadRegularTemplate(name string,
@@ -148,11 +156,7 @@ func main() {
 	// }									    //
 	//////////////////////////////////////////////
 
-	staticDir, email := ParseFlags()
-
-	if email == "none" || !validator.IsEmail(email) {
-		log.Printf("email address is not valid: %s\n", email)
-	}
+	staticDir, key := ParseFlags()
 
 	templateDir := staticDir + "templates/"
 
@@ -169,7 +173,7 @@ func main() {
 		templates[s] = loadRegularTemplate(s, templateDir)
 	}
 
-	l, err := net.Listen("tcp", ":8081")
+	listener, err := net.Listen("tcp", ":8081")
 	if err != nil {
 		log.Panicf("cannot listen: %s", err)
 	}
@@ -189,9 +193,13 @@ func main() {
 	router.PathPrefix("/static/").
 		Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 
+	key = []byte("000000000TEST0000000000000000000")
+
+	handler := csrf.Protect(key)(router)
+
 	// TODO change port to something not in go docs
 	srv := &http.Server{
-		Handler:      router,
+		Handler:      handler,
 		Addr:         "127.0.0.1:8081",
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout:  10 * time.Second,
@@ -204,9 +212,11 @@ func main() {
 	router.HandleFunc("/contact", handleBaseTemplate(templates["contact"], nil))
 	router.HandleFunc("/about", handleBaseTemplate(templates["about"], nil))
 
+	// TODO fix contact info
+	email := "chris@covercash.biz"
 	router.HandleFunc("/api/email", handleEmailSend(email))
 
-	err = srv.Serve(l)
+	err = srv.Serve(listener)
 	if err != nil {
 		log.Panicln(err)
 	}
