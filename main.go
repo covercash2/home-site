@@ -17,6 +17,7 @@ import (
 )
 
 var defaultStaticDir = "./static/"
+var portNumber = ":8081"
 
 type webPage struct {
 	Title string
@@ -38,7 +39,7 @@ func KeepAlive() {
 		return
 	}
 	for {
-		_, err := http.Get("http://127.0.0.1:8001")
+		_, err := http.Get("http://127.0.0.1" + portNumber)
 		if err == nil {
 			_, err = daemon.SdNotify(false, "WATCHDOG=1")
 			if err != nil {
@@ -172,7 +173,7 @@ func main() {
 		templates[s] = loadRegularTemplate(s, templateDir)
 	}
 
-	listener, err := net.Listen("tcp", ":8081")
+	listener, err := net.Listen("tcp", portNumber)
 	if err != nil {
 		log.Panicf("cannot listen: %s", err)
 	}
@@ -199,7 +200,7 @@ func main() {
 	// TODO change port to something not in go docs
 	srv := &http.Server{
 		Handler:      handler,
-		Addr:         "127.0.0.1:8081",
+		Addr:         "127.0.0.1" + portNumber,
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout:  10 * time.Second,
 	}
