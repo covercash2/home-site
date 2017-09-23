@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"flag"
 	"github.com/coreos/go-systemd/daemon"
 	"github.com/gorilla/csrf"
@@ -29,11 +29,6 @@ type contactInfo struct {
 	Email string
 }
 
-type configuration struct {
-	StaticDir string
-	CSRFKey   string
-}
-
 // KeepAlive uses systemd watchdog to keep
 // the server alive
 // TODO use a channel to report an error
@@ -59,7 +54,9 @@ func handleBaseTemplate(
 	data interface{},
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := tmpl.ExecuteTemplate(w, "base", data)
+		err := tmpl.ExecuteTemplate(w, "base", map[string]interface{}{
+			csrf.TemplateTag: csrf.TemplateField(r),
+		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -75,22 +72,24 @@ type emailForm struct {
 
 func handleEmailSend(email string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		decoder := json.NewDecoder(r.Body)
+		// decoder := json.NewDecoder(r.Body)
 
-		var form emailForm
-		err := decoder.Decode(&form)
-		if err != nil {
-			log.Panicf("could not decode message:\n%s", r.Body)
-		}
+		// var form emailForm
+		// err := decoder.Decode(&form)
+		// if err != nil {
+		// 	log.Panicf("could not decode message:\n%s", r.Body)
+		// }
 
-		log.Printf("struct formed from json:\n%s\n", form)
+		// log.Printf("struct formed from json:\n%s\n", form)
 
-		if email == "none" {
-			log.Println("email address is not valid or was not given\n" +
-				"unable to send email")
-		} else {
+		// if email == "none" {
+		// 	log.Println("email address is not valid or was not given\n" +
+		// 		"unable to send email")
+		// } else {
 
-		}
+		// }
+
+		log.Printf("form:%v\n", r.PostForm)
 	}
 }
 
@@ -195,7 +194,7 @@ func main() {
 
 	key = []byte("000000000TEST0000000000000000000")
 
-	handler := csrf.Protect(key)(router)
+	handler := csrf.Protect(key, csrf.Secure(false))(router)
 
 	// TODO change port to something not in go docs
 	srv := &http.Server{
@@ -204,6 +203,8 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout:  10 * time.Second,
 	}
+
+	apiRouter := router.PathPrefix("/api").Subrouter()
 
 	router.HandleFunc("/", handleBaseTemplate(templates["index"], nil))
 	router.HandleFunc("/music", handleBaseTemplate(templates["music"], nil))
@@ -214,7 +215,8 @@ func main() {
 
 	// TODO fix contact info
 	email := "chris@covercash.biz"
-	router.HandleFunc("/api/email", handleEmailSend(email))
+	// router.HandleFunc("/api/email", handleEmailSend(email))
+	apiRouter.HandleFunc("/email", handleEmailSend(email)).Methods("POST")
 
 	err = srv.Serve(listener)
 	if err != nil {

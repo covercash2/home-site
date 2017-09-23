@@ -5,63 +5,50 @@
 
 {{define "content"}}
 <script>
-
-    function sendJSON(json) {
-	var request = new XMLHttpRequest();
-	// get api endpoint (doesn't include https://)
-	var url = "/api/email";
-	request.open("POST", url, true);
-	request.setRequestHeader("Content-type",
-				"application/json");
-	request.send(json);
-    }
-
-    (function () {
-	function toJSONString(form) {
-	    var map = {};
-	    var elements = form.querySelectorAll(
-		"input, select, textarea");
-
-	    for(var i = 0; i < elements.length; i++) {
-		var e = elements[i];
-		var name = e.name;
-		var value = e.value;
-
-		if(name) {
-		    map[name] = value;
-		}
-	    }
-
-	    return JSON.stringify(map);
-	}
-
-	document.addEventListener(
-	    "DOMContentLoaded",
-	    function() {
-		var form = document.getElementById("email-form");
-		form.addEventListener("submit", function(e) {
-		    e.preventDefault();
-		    var json = toJSONString(this);
-		    console.log(json);
-		    sendJSON(json)
-		}, false);
-	    })
-    })();
-
+ /* 
+  *     function sendJSON(json) {
+  * 	var request = new XMLHttpRequest();
+  * 	// get api endpoint (doesn't include https://)
+  * 	var url = "/api/email";
+  * 	request.open("POST", url, true);
+  * 	request.setRequestHeader("Content-type",
+  * 				"application/json");
+  * 	request.send(json);
+  *     }
+  * 
+  *     (function () {
+  * 	function toJSONString(form) {
+  * 	    var map = {};
+  * 	    var elements = form.querySelectorAll(
+  * 		"input, select, textarea");
+  * 
+  * 	    for(var i = 0; i < elements.length; i++) {
+  * 		var e = elements[i];
+  * 		var name = e.name;
+  * 		var value = e.value;
+  * 
+  * 		if(name) {
+  * 		    map[name] = value;
+  * 		}
+  * 	    }
+  * 
+  * 	    return JSON.stringify(map);
+  * 	}
+  * 
+  * 	document.addEventListener(
+  * 	    "DOMContentLoaded",
+  * 	    function() {
+  * 		var form = document.getElementById("email-form");
+  * 		form.addEventListener("submit", function(e) {
+  * 		    e.preventDefault();
+  * 		    var json = toJSONString(this);
+  * 		    console.log(json);
+  * 		    sendJSON(json)
+  * 		}, false);
+  * 	    })
+  *     })();
+  * */
 </script>
-
-<form id="email-form" action="#" method="post">
-    <label for="name">name</label>
-    <input type="text" name="name" id="name-input" />
-    <label for="email">email</label>
-    <input type="email" name="email" id="email-input" />
-    <label for="phone">phone number</label>
-    <input type="text" name="phone" id="phone-input" />
-    <label for="message">message</label>
-    <textarea name="message" rows="15" columns="30"
-	      id="message-input"></textarea>
-    <input type="submit" value="send" />
-</form>
 
 <h1>contact me</h1>
 <img src="https://media.giphy.com/media/Oe4V14aLzv7JC/giphy.gif"
@@ -70,4 +57,20 @@
 <p>email me at <strong>covercash2@gmail.com</strong></p>
 <h3>phone</h3>
 <p>text (preferred) or call <strong>(501) 510-0946</strong></p>
+
+<form id="email-form" action="/api/email" method="post" style="visibility:hidden">
+    <label for="name">name</label>
+    <input type="text" name="name" id="name-input" />
+    <label for="email">email</label>
+    <input type="email" name="email" id="email-input" />
+    <label for="phone">phone number</label>
+    <input type="tel" pattern='\d{10}'
+	   name="phone" id="phone-input" />
+    <label for="message">message</label>
+    <textarea name="message" rows="15" columns="30"
+	      id="message-input"></textarea>
+    {{.csrfField}}
+    <input type="submit" value="send" />
+</form>
+
 {{end}}
