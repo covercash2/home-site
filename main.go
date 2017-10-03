@@ -135,14 +135,6 @@ func sendMail(form emailForm) error {
 	return nil
 }
 
-func handleSignals() {
-	sigChannel := make(chan os.Signal, 1)
-	signal.Notify(sigChannel, syscall.SIGABRT)
-	sig := <-sigChannel
-	log.Printf("signal recieved: %s\n", sig)
-	panic("process aborted")
-}
-
 func main() {
 	var err error
 	templates := make(map[string]*template.Template)
@@ -186,7 +178,6 @@ func main() {
 
 	// keep systemd service alive via watchdog
 	go KeepAlive()
-	go handleSignals()
 
 	router := mux.NewRouter()
 
