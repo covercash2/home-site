@@ -144,8 +144,6 @@ func main() {
 	var err error
 	templates := make(map[string]*template.Template)
 
-	api.InitAPI()
-
 	staticDir, key := ParseFlags()
 
 	templateDir := staticDir + "templates/"
@@ -179,9 +177,12 @@ func main() {
 
 	router := mux.NewRouter()
 
+	api.InitAPI(router)
+
 	router.PathPrefix("/static/").
 		Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 
+	// TODO make better key
 	key = []byte("000000000TEST0000000000000000000")
 
 	handler := csrf.Protect(key, csrf.Secure(false))(router)
@@ -194,17 +195,12 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 	}
 
-	apiRouter := router.PathPrefix("/api").Subrouter()
-
 	router.HandleFunc("/", handleBaseTemplate(templates["index"], nil))
 	router.HandleFunc("/music", handleBaseTemplate(templates["music"], nil))
 	router.HandleFunc("/tech", handleBaseTemplate(templates["tech"], nil))
 	router.HandleFunc("/store", handleBaseTemplate(templates["wip"], nil))
 	router.HandleFunc("/contact", handleBaseTemplate(templates["contact"], nil))
 	router.HandleFunc("/about", handleBaseTemplate(templates["about"], nil))
-
-	// router.HandleFunc("/api/email", handleEmailSend(email))
-	apiRouter.HandleFunc("/email", handleEmailSend(me)).Methods("POST")
 
 	err = srv.Serve(listener)
 	if err != nil {

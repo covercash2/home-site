@@ -1,14 +1,22 @@
 package api
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
+	"log"
 	"net/http"
 )
 
 var formDecoder = schema.NewDecoder()
 var me Person
 
-func InitAPI() {
+// InitAPI sets up the API router and mux and
+// initializes states
+func InitAPI(router *mux.Router) {
+	apiRouter := router.PathPrefix("/api").Subrouter()
+
+	apiRouter.HandleFunc("/email", handleSendMail)
+
 	formDecoder.IgnoreUnknownKeys(true)
 	me = Person{
 		EmailAddress: "chris@covercash.biz",
@@ -23,6 +31,18 @@ type emailForm struct {
 	PhoneNumber  string `schema:"phone"`
 	Message      string `schema:"message"`
 	Subject      string `schema:"subject"`
+}
+
+func handleSendMail(
+	writer http.ResponseWriter,
+	request *http.Request,
+) {
+	email, err := ParseEmailForm(request)
+	if err != nil {
+		log.Panicf("unable to parse email:\n%s\n", err)
+	}
+
+	log.Printf("email:\n%s\n", email)
 }
 
 // ParseEmailForm takes a reference to a request,

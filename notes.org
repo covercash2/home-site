@@ -1,5 +1,9 @@
 my website
 
+* TODO csrf key
+  this key needs to be secured before deployment.
+srsly
+
 * bugs
 ** TODO fix watchdog
 ** TODO 403 error on json POST
