@@ -1,12 +1,13 @@
+
+
 function sendJSON(json) {
     var request = new XMLHttpRequest();
-    var url = "/api/email"
+    // get api endpoint (doesn't include https://)
+    var url = "/api/email";
     request.open("POST", url, true);
     request.setRequestHeader("Content-type",
-			     "application/json");
+			    "application/json");
     request.send(json);
-    var log = "json sent:\n".concat(json);
-    console.log(log);
 }
 
 (function () {
@@ -40,3 +41,4 @@ function sendJSON(json) {
 	    }, false);
 	})
 })();
+

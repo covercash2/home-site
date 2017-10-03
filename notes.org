@@ -4,6 +4,13 @@ my website
 ** TODO fix watchdog
 ** TODO 403 error on json POST
 * modules
+** api
+   manages api calls
+*** mail
+   handle email functionality
+**** TODO write test data into email form for testing
+maybe use go 
+
 ** main
    does specific configurations
 and starts routines

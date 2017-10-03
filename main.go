@@ -1,18 +1,15 @@
 package main
 
 import (
-	// "encoding/json"
 	"flag"
 	"github.com/coreos/go-systemd/daemon"
+	"github.com/covercash2/home-site/api"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"html/template"
 	"log"
 	"net"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -64,34 +61,46 @@ func handleBaseTemplate(
 	}
 }
 
-type emailForm struct {
-	Name    string
-	Email   string
-	Phone   string
-	Message string
+var me = api.Person{
+	EmailAddress: "chris@covercash.biz",
+	Name:         "Chris Overcash",
+	PhoneNumber:  "5015100946",
 }
 
-func handleEmailSend(email string) http.HandlerFunc {
+func handleEmailSend(recipient api.Person) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		email, err := api.ParseEmailForm(r)
+		if err != nil {
+			log.Panicf("unable to parse email:\n%s\n", err)
+		}
+
+		log.Printf("email:\n%s\n", email)
+
 		// decoder := json.NewDecoder(r.Body)
 
 		// var form emailForm
 		// err := decoder.Decode(&form)
 		// if err != nil {
-		// 	log.Panicf("could not decode message:\n%s", r.Body)
+		// 	log.Println("could not decode message:\n%s", r.Body)
+		// 	return
 		// }
 
 		// log.Printf("struct formed from json:\n%s\n", form)
 
-		// if email == "none" {
+		// if recipient.Email == "none" {
 		// 	log.Println("email address is not valid or was not given\n" +
 		// 		"unable to send email")
 		// } else {
 
 		// }
 
-		log.Printf("form:%v\n", r.PostForm)
+		// 	email, err := api.ParseEmailForm(r)
+		// 	if err != nil {
+		// 		log.Panicf("error parsing form:\n%s\n", err)
+		// 	}
 	}
+
 }
 
 // ParseFlags parses command line flags
@@ -131,22 +140,11 @@ func loadRegularTemplate(name string,
 	return tmpl
 }
 
-func sendMail(form emailForm) error {
-	return nil
-}
-
 func main() {
 	var err error
 	templates := make(map[string]*template.Template)
 
-	// TODO encode contact info
-	//////////////////////////////////////////////
-	// myInfo := contactInfo{				    //
-	// 	Name:  "Chris Overcash",			    //
-	// 	Email: "covercash.biz@gmail.com",	    //
-	// 	Phone: "(501) 510-0946",			    //
-	// }									    //
-	//////////////////////////////////////////////
+	api.InitAPI()
 
 	staticDir, key := ParseFlags()
 
@@ -205,10 +203,8 @@ func main() {
 	router.HandleFunc("/contact", handleBaseTemplate(templates["contact"], nil))
 	router.HandleFunc("/about", handleBaseTemplate(templates["about"], nil))
 
-	// TODO fix contact info
-	email := "chris@covercash.biz"
 	// router.HandleFunc("/api/email", handleEmailSend(email))
-	apiRouter.HandleFunc("/email", handleEmailSend(email)).Methods("POST")
+	apiRouter.HandleFunc("/email", handleEmailSend(me)).Methods("POST")
 
 	err = srv.Serve(listener)
 	if err != nil {
