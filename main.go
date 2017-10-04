@@ -16,17 +16,6 @@ import (
 var defaultStaticDir = "./static/"
 var portNumber = ":8081"
 
-type webPage struct {
-	Title string
-	Body  []byte
-}
-
-type contactInfo struct {
-	Name  string
-	Phone string
-	Email string
-}
-
 // KeepAlive uses systemd watchdog to keep
 // the server alive
 // TODO use a channel to report an error
