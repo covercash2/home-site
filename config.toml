@@ -1,0 +1,8 @@
+staticDir = "./static"
+
+CSRFKey = ""
+
+[me]
+name = "Chris Overcash"
+mail = "chris@covercash.biz"
+phone = "5015100946"
