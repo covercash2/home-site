@@ -1,6 +1,8 @@
-staticDir = "./static"
+staticDir = "./static/"
 
-CSRFKey = ""
+CSRFKey = "00000000000000000000000000000000"
+
+port = "8081"
 
 [me]
 name = "Chris Overcash"
