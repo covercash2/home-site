@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/coreos/go-systemd/daemon"
 	"github.com/covercash2/home-site/api"
+	"github.com/covercash2/home-site/config"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"html/template"
@@ -14,7 +15,11 @@ import (
 )
 
 var defaultStaticDir = "./static/"
+var defaultConfigFile = "./config.toml"
+
+var csrfKey [32]byte
 var portNumber = ":8081"
+var staticDir string
 
 // KeepAlive uses systemd watchdog to keep
 // the server alive
@@ -96,8 +101,8 @@ func handleEmailSend(recipient api.Person) http.HandlerFunc {
 // returns the directory where static files are served
 // and the admin email respectively
 // TODO add flags for email address and password
-func ParseFlags() (string, []byte) {
-	var staticDir string
+func ParseFlags() (string, string) {
+	var key string
 	flag.StringVar(&staticDir, "staticDir", defaultStaticDir,
 		"directory for serving static files")
 
@@ -109,7 +114,7 @@ func ParseFlags() (string, []byte) {
 
 	flag.Parse()
 
-	return staticDir, nil
+	return staticDir, key
 }
 
 func loadRegularTemplate(name string,
@@ -133,9 +138,18 @@ func main() {
 	var err error
 	templates := make(map[string]*template.Template)
 
-	staticDir, key := ParseFlags()
+	configFile := defaultConfigFile
 
-	templateDir := staticDir + "templates/"
+	cfg, err := config.ParseConfigFromFile(configFile)
+	if err != nil {
+		log.Panicf("unable to load config file [%s]\nerror:\n%s",
+			configFile,
+			err)
+	}
+
+	staticDir = cfg.StaticDir
+
+	templateDir := cfg.StaticDir + "templates/"
 
 	templateNames := [...]string{
 		"about",
@@ -171,10 +185,7 @@ func main() {
 	router.PathPrefix("/static/").
 		Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 
-	// TODO make better key
-	key = []byte("000000000TEST0000000000000000000")
-
-	handler := csrf.Protect(key, csrf.Secure(false))(router)
+	handler := csrf.Protect(cfg.CSRFKey[:], csrf.Secure(false))(router)
 
 	// TODO change port to something not in go docs
 	srv := &http.Server{
