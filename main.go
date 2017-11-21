@@ -15,11 +15,12 @@ import (
 )
 
 var defaultStaticDir = "./static/"
-var defaultConfigFile = "./config.toml"
+var defaultConfigPath = "./config.toml"
 
 var csrfKey [32]byte
 var portNumber = ":8081"
 var staticDir string
+var configPath string
 
 // KeepAlive uses systemd watchdog to keep
 // the server alive
@@ -102,9 +103,11 @@ func handleEmailSend(recipient api.Person) http.HandlerFunc {
 // and the admin email respectively
 // TODO add flags for email address and password
 func ParseFlags() (string, string) {
-	var key string
 	flag.StringVar(&staticDir, "staticDir", defaultStaticDir,
 		"directory for serving static files")
+
+	flag.StringVar(&configPath, "configPath", defaultConfigPath,
+		"path to config.toml")
 
 	// flag.StringVar(&key, "key", "", "csrf key")
 
@@ -114,7 +117,7 @@ func ParseFlags() (string, string) {
 
 	flag.Parse()
 
-	return staticDir, key
+	return staticDir, configPath
 }
 
 func loadRegularTemplate(name string,
@@ -138,7 +141,7 @@ func main() {
 	var err error
 	templates := make(map[string]*template.Template)
 
-	configFile := defaultConfigFile
+	_, configFile := ParseFlags()
 
 	cfg, err := config.ParseConfigFromFile(configFile)
 	if err != nil {
