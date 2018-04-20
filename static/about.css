@@ -1,5 +1,9 @@
-img {
-  display: block;
-  max-width: 90%;
-  margin: auto;
+#github {
+    background-color: #444;
+    color: #eee;
+    float: left;
+    margin: 8px;
+    padding: 8px;
+    text-align: center;
+    text-decoration: none;
 }
