@@ -16,7 +16,7 @@ html {
 body {
     background-color: #000;
     color: #dedede;
-    font-family: Helvetica;
+    font-family: monospace;
     font-size: 1em;
     font-weight: 300;
     height: 100%;
@@ -124,5 +124,15 @@ footer {
     padding: 8px;
     text-align: center;
     text-decoration: none;
+}
+
+.yt-video {
+    margin: 8px;
+    padding: 16px;
+}
+
+.yt-video iframe {
+    margin: 8px;
+    width: 100%;
 }
 
