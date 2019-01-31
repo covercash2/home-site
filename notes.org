@@ -1,5 +1,6 @@
 my website
 
+* TODO iterate over Log map[string]Entry
 * TODO csrf key
   this key needs to be secured before deployment.
 srsly
@@ -32,7 +33,8 @@ to keep process alive
 
 * csrf
 ** TODO learn more
-** TODO put csrf in the the template
+   cross site ???
+** DONE put csrf in the the template
 ** TODO figure out how to store the key
 * javascript
 ** TODO get a preprocessor

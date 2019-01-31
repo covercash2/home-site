@@ -1,0 +1,13 @@
+.date {
+    color: #aaa;
+    font-weight: 100;
+    margin-left: 8px;
+}
+
+.entry {
+    font-weight: 100;
+}
+
+.entry a {
+    text-decoration: none;
+}

@@ -5,24 +5,16 @@
 
 {{define "content"}}
 <h1>contact me</h1>
+<a id="github" href="https://github.com/covercash2">
+    <img border="0" alt="my github"
+	 width="16"
+	 src="https://camo.githubusercontent.com/6d3b6965b71ebb2f6ac981a061d70ace7cddd44f/68747470733a2f2f6769742d73636d2e636f6d2f696d616765732f6c6f676f732f646f776e6c6f6164732f4769742d49636f6e2d31373838432e706e67"
+    />
+    github
+</a>
 <h3>email</h3>
 <p>email me at <strong>covercash2@gmail.com</strong></p>
 <h3>phone</h3>
 <p>text or call <strong>(501) 510-0946</strong></p>
-
-<form id="email-form" action="/api/email" method="post" >
-    <label for="name">name</label>
-    <input type="text" name="name" id="name-input" />
-    <label for="email">email</label>
-    <input type="email" name="email" id="email-input" />
-    <label for="phone">phone number</label>
-    <input type="tel" pattern='\d{10}'
-	   name="phone" id="phone-input" />
-    <label for="message">message</label>
-    <textarea name="message" rows="15" columns="30"
-	      id="message-input"></textarea>
-    {{.csrfField}}
-    <input type="submit" value="send" />
-</form>
 
 {{end}}

@@ -115,3 +115,14 @@ footer {
     right: 0;
     width: 100%;
 }
+
+#github {
+    background-color: #444;
+    color: #eee;
+    float: right;
+    margin: 8px;
+    padding: 8px;
+    text-align: center;
+    text-decoration: none;
+}
+

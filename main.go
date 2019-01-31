@@ -5,6 +5,7 @@ import (
 	"github.com/coreos/go-systemd/daemon"
 	"github.com/covercash2/home-site/api"
 	"github.com/covercash2/home-site/config"
+	"github.com/covercash2/home-site/entry"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"html/template"
@@ -47,6 +48,31 @@ func handleBaseTemplate(
 	data interface{},
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		err := tmpl.ExecuteTemplate(w, "base", data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func handleLogEntry(
+	tmpl *template.Template,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		entryName := vars["entry"]
+
+		err := tmpl.ExecuteTemplate(w, "base", entry.Log[entryName])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func handleCSRFTemplate(
+	tmpl *template.Template,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		err := tmpl.ExecuteTemplate(w, "base", map[string]interface{}{
 			csrf.TemplateTag: csrf.TemplateField(r),
 		})
@@ -62,6 +88,7 @@ var me = api.Person{
 	PhoneNumber:  "5015100946",
 }
 
+// TODO actually send an email
 func handleEmailSend(recipient api.Person) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -69,11 +96,9 @@ func handleEmailSend(recipient api.Person) http.HandlerFunc {
 		if err != nil {
 			log.Panicf("unable to parse email:\n%s\n", err)
 		}
-
 		log.Printf("email:\n%s\n", email)
 
 		// decoder := json.NewDecoder(r.Body)
-
 		// var form emailForm
 		// err := decoder.Decode(&form)
 		// if err != nil {
@@ -156,12 +181,16 @@ func main() {
 
 	templateNames := [...]string{
 		"about",
+		"blog",
 		"contact",
+		"entry",
 		"index",
 		"music",
 		"tech",
 		"wip",
 	}
+
+	log.Printf("loading templates")
 
 	for _, s := range templateNames {
 		templates[s] = loadRegularTemplate(s, templateDir)
@@ -190,6 +219,8 @@ func main() {
 
 	handler := csrf.Protect(cfg.CSRFKey[:], csrf.Secure(false))(router)
 
+	logs := entry.LoadAll(staticDir + "entries")
+
 	// TODO change port to something not in go docs
 	srv := &http.Server{
 		Handler:      handler,
@@ -199,11 +230,13 @@ func main() {
 	}
 
 	router.HandleFunc("/", handleBaseTemplate(templates["index"], nil))
+	router.HandleFunc("/about", handleBaseTemplate(templates["about"], nil))
+	router.HandleFunc("/contact", handleBaseTemplate(templates["contact"], nil))
 	router.HandleFunc("/music", handleBaseTemplate(templates["music"], nil))
 	router.HandleFunc("/tech", handleBaseTemplate(templates["tech"], nil))
-	router.HandleFunc("/store", handleBaseTemplate(templates["wip"], nil))
-	router.HandleFunc("/contact", handleBaseTemplate(templates["contact"], nil))
-	router.HandleFunc("/about", handleBaseTemplate(templates["about"], nil))
+
+	router.HandleFunc("/blog", handleBaseTemplate(templates["blog"], logs))
+	router.HandleFunc("/blog/{entry}", handleLogEntry(templates["entry"]))
 
 	err = srv.Serve(listener)
 	if err != nil {

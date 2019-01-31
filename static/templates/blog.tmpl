@@ -1,0 +1,16 @@
+{{define "head"}}
+<title>C/$ blog</title>
+<link rel="stylesheet" type="text/css" href="/static/blog.css">
+{{end}}
+
+{{define "content"}}
+<h1>blogs</h1>
+<ul>
+    {{ range .Entries }}
+    <li class="entry">
+	<a href="blog/{{ .Name }}" >{{ .Name }}</a>
+	<span class="date">{{ .Created.Format "2006 Jan 02" }}</span>
+    </li>
+    {{end}}
+</ul>
+{{end}}
